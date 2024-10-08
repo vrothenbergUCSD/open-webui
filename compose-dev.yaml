@@ -1,0 +1,48 @@
+version: '3'
+services:
+  frontend:
+    build:
+      context: .
+      target: build
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - backend
+    ports:
+      - "3000:5173"
+    volumes:
+      - ./frontend:/app/frontend # Mount the frontend code for hot-reload
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  backend:
+    build:
+      context: .
+      target: base
+    command: ["bash", "dev.sh"]
+    env_file: ".env"
+    environment:
+      - ENV=dev
+      - WEBUI_AUTH=False
+    volumes:
+      - ./backend:/app/backend # Mount the backend code for hot-reload
+      - data:/app/backend/data
+    ports:
+      - "8080:8080"
+    restart: always
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  pipelines:
+    build:
+      context: .
+      target: base # or your own Dockerfile for pipelines if you have one
+    ports:
+      - "9099:9099"
+    volumes:
+      - ./pipelines:/app/pipelines # Mount the pipelines directory
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: always
+
+volumes:
+  data: {}
